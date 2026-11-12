@@ -1,0 +1,22 @@
+import csv
+with open("training_data.csv", "r") as file:
+    data = list(csv.reader(file))
+attributes = data[0]
+examples = data[1:]
+hypothesis = ['0'] * (len(attributes) - 1)
+print("FIND-S Algorithm")
+print("-----------------")
+for example in examples:
+    if example[-1] == "Yes":
+
+        for i in range(len(hypothesis)):
+            if hypothesis[i] == '0':
+                hypothesis[i] = example[i]
+            elif hypothesis[i] != example[i]:
+                hypothesis[i] = '?'
+
+        print("Positive Example:", example[:-1])
+        print("Hypothesis:", hypothesis)
+        print()
+print("Final Most Specific Hypothesis:")
+print(hypothesis)

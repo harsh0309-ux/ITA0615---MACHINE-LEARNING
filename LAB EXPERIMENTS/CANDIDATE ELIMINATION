@@ -1,0 +1,54 @@
+import csv
+with open("training_data.csv", "r") as file:
+    data = list(csv.reader(file))
+header = data[0]
+training_data = data[1:]
+num_attributes = len(header) - 1
+S = ['0'] * num_attributes
+G = [['?'] * num_attributes]
+def covers(hypothesis, example):
+    for h, e in zip(hypothesis, example):
+        if h != '?' and h != e:
+            return False
+    return True
+for row in training_data:
+
+    example = row[:-1]
+    label = row[-1]
+    if label == "Yes":
+        G = [g for g in G if covers(g, example)]
+        for i in range(num_attributes):
+
+            if S[i] == '0':
+                S[i] = example[i]
+
+            elif S[i] != example[i]:
+                S[i] = '?'
+    elif label == "No":
+        new_G = []
+        for g in G:
+            if covers(g, example):
+                for i in range(num_attributes):
+                    if g[i] == '?':
+                        if S[i] != '0' and S[i] != example[i]:
+
+                            new_hypothesis = g.copy()
+                            new_hypothesis[i] = S[i]
+                            if covers(new_hypothesis, S):
+                                new_G.append(new_hypothesis)
+            else:
+                new_G.append(g)
+        G = new_G
+    print("\nTraining Example:", example, "=>", label)
+    print("S =", S)
+    print("G =", G)
+print("\n======================================")
+print("FINAL CANDIDATE ELIMINATION RESULT")
+print("======================================")
+
+print("Specific Boundary (S):")
+print(S)
+
+print("\nGeneral Boundary (G):")
+for g in G:
+    print(g)

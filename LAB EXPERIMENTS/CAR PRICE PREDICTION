@@ -1,0 +1,29 @@
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, mean_absolute_error
+ 
+rng = np.random.default_rng(42)
+n = 500
+df = pd.DataFrame({
+    'Year': rng.integers(2008, 2024, n),
+    'KmDriven': rng.integers(5000, 150000, n),
+    'EngineCC': rng.choice([1000, 1200, 1500, 1800, 2000], n),
+    'Owners': rng.integers(1, 4, n),
+})
+df['Price'] = (df.EngineCC * 450 + (df.Year - 2008) * 35000 - df.KmDriven * 2.5
+               - df.Owners * 15000 + rng.normal(0, 25000, n)).round(0)
+df.to_csv('exp13_data.csv', index=False)
+ 
+X, y = df.drop(columns='Price'), df['Price']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+for name, m in [('Linear Regression', LinearRegression()),
+                ('Random Forest', RandomForestRegressor(n_estimators=100, random_state=42))]:
+    p = m.fit(X_train, y_train).predict(X_test)
+    print(f"{name:18s}  R2 = {r2_score(y_test, p):.4f}   MAE = {mean_absolute_error(y_test, p):,.0f}")
+ 
+car = pd.DataFrame([[2018, 40000, 1500, 1]], columns=X.columns)
+print("\nCar (2018, 40000 km, 1500 cc, 1 owner) -> Predicted price : Rs. %s" %
+      f"{LinearRegression().fit(X_train, y_train).predict(car)[0]:,.0f}")

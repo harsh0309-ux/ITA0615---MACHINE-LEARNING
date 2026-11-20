@@ -1,0 +1,20 @@
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import Perceptron
+from sklearn.metrics import accuracy_score, confusion_matrix
+ 
+iris = load_iris(as_frame=True)
+iris.frame.to_csv('exp18_data.csv', index=False)
+X_train, X_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.2, random_state=42, stratify=iris.target)
+ 
+scaler = StandardScaler().fit(X_train)
+model = Perceptron(max_iter=1000, eta0=0.1, random_state=42)
+model.fit(scaler.transform(X_train), y_train)
+pred = model.predict(scaler.transform(X_test))
+ 
+print("Weights (one row per class):\n", model.coef_.round(3))
+print("Bias :", model.intercept_.round(3))
+print("\nTraining accuracy : %.4f" % model.score(scaler.transform(X_train), y_train))
+print("Test accuracy     : %.4f" % accuracy_score(y_test, pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, pred))

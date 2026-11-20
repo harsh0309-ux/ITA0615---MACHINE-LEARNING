@@ -1,0 +1,30 @@
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, confusion_matrix
+ 
+rng = np.random.default_rng(42)
+n = 1000
+df = pd.DataFrame({
+    'RAM_GB': rng.choice([2, 3, 4, 6, 8, 12], n),
+    'Storage_GB': rng.choice([32, 64, 128, 256], n),
+    'Battery_mAh': rng.integers(2000, 6000, n),
+    'CameraMP': rng.integers(5, 108, n),
+    'ScreenInches': rng.uniform(5.0, 7.0, n).round(1),
+})
+score = (df.RAM_GB * 1.5 + df.Storage_GB / 32 + df.Battery_mAh / 1000 + df.CameraMP / 15
+         + rng.normal(0, 1.2, n))
+df['PriceRange'] = pd.qcut(score, 4, labels=[0, 1, 2, 3]).astype(int)
+df.to_csv('exp17_data.csv', index=False)
+ 
+X, y = df.drop(columns='PriceRange'), df['PriceRange']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+model = RandomForestClassifier(n_estimators=100, random_state=42).fit(X_train, y_train)
+pred = model.predict(X_test)
+ 
+print("Accuracy : %.4f" % accuracy_score(y_test, pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, pred))
+phone = pd.DataFrame([[8, 128, 4500, 64, 6.4]], columns=X.columns)
+labels = {0: 'Low cost', 1: 'Medium cost', 2: 'High cost', 3: 'Very high cost'}
+print("\nPhone (8GB RAM, 128GB, 4500mAh, 64MP, 6.4in) -> Price range :", labels[model.predict(phone)[0]])

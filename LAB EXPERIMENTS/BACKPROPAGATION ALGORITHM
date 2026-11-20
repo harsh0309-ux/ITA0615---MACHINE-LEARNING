@@ -1,0 +1,34 @@
+import numpy as np
+import pandas as pd
+ 
+# XOR data set
+X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=float)
+y = np.array([[0], [1], [1], [0]], dtype=float)
+pd.DataFrame(np.hstack([X, y]), columns=['x1', 'x2', 'y']).to_csv('exp04_data.csv', index=False)
+ 
+np.random.seed(1)
+W1 = np.random.uniform(-1, 1, (2, 4)); b1 = np.zeros((1, 4))
+W2 = np.random.uniform(-1, 1, (4, 1)); b2 = np.zeros((1, 1))
+lr = 0.5
+ 
+def sigmoid(z):  return 1 / (1 + np.exp(-z))
+def dsigmoid(a): return a * (1 - a)
+ 
+for epoch in range(1, 10001):
+    # forward pass
+    h = sigmoid(X @ W1 + b1)
+    out = sigmoid(h @ W2 + b2)
+    error = y - out
+    # backward pass
+    d_out = error * dsigmoid(out)
+    d_h = (d_out @ W2.T) * dsigmoid(h)
+    # weight updates
+    W2 += lr * h.T @ d_out;  b2 += lr * d_out.sum(axis=0, keepdims=True)
+    W1 += lr * X.T @ d_h;    b1 += lr * d_h.sum(axis=0, keepdims=True)
+    if epoch % 2000 == 0:
+        print(f"Epoch {epoch:5d}  Mean Squared Error = {np.mean(error ** 2):.6f}")
+ 
+print("\nInput  Target  Predicted  Class")
+for xi, ti, oi in zip(X, y, out):
+    print(f"{xi}   {int(ti[0])}      {oi[0]:.4f}     {int(oi[0] > 0.5)}")
+print("\nAccuracy : %.2f%%" % (100 * np.mean((out > 0.5) == y)))

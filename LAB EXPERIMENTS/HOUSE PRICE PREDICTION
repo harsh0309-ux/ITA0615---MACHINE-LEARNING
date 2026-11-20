@@ -1,0 +1,32 @@
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, mean_squared_error
+ 
+rng = np.random.default_rng(7)
+n = 600
+df = pd.DataFrame({
+    'AreaSqFt': rng.integers(500, 3500, n),
+    'Bedrooms': rng.integers(1, 6, n),
+    'Bathrooms': rng.integers(1, 4, n),
+    'AgeYears': rng.integers(0, 40, n),
+    'DistanceToCityKm': rng.uniform(1, 30, n).round(1),
+})
+df['Price'] = (df.AreaSqFt * 3000 + df.Bedrooms * 200000 + df.Bathrooms * 150000
+               - df.AgeYears * 25000 - df.DistanceToCityKm * 40000
+               + rng.normal(0, 300000, n)).round(0)
+df.to_csv('exp14_data.csv', index=False)
+ 
+X, y = df.drop(columns='Price'), df['Price']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+model = RandomForestRegressor(n_estimators=200, random_state=42).fit(X_train, y_train)
+pred = model.predict(X_test)
+ 
+print("R2 Score : %.4f" % r2_score(y_test, pred))
+print("RMSE     : %.2f" % np.sqrt(mean_squared_error(y_test, pred)))
+print("\nFeature importances:")
+for f, v in sorted(zip(X.columns, model.feature_importances_), key=lambda t: -t[1]):
+    print(f"  {f:18s} {v:.4f}")
+house = pd.DataFrame([[1800, 3, 2, 5, 8.0]], columns=X.columns)
+print("\nHouse (1800 sqft, 3 bed, 2 bath, 5 yrs, 8 km) -> Predicted price : Rs. {:,.0f}".format(model.predict(house)[0]))
